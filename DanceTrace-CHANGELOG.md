@@ -2,6 +2,60 @@
 
 **使用说明：**本日志用于记录 DanceTrace 项目的关键产品决策、范围收敛与后续开发进展。采用“只增不改、最新在上”的维护方式。每完成一个重要阶段、版本决策或开发任务，都应追加一条新记录。
 
+# 2026\-06\-12 · v0\.3\.0
+
+## 已完成
+
+- 初始化 React \+ TypeScript \+ Vite Web/PWA 工程
+
+- 实现首个可运行 MVP 骨架：首页项目工作台、项目创建、项目详情主视图
+
+- 实现 Master / Practice 视频上传入口、Practice 版本列表、手动起点校准面板
+
+- 实现模拟分析结果链路，输出综合分、节奏分、动作分、问题时间点与可信度提示
+
+- 实现双播放器同步回看基础 UI 与成长趋势图
+
+- 配置 PWA manifest，并将页面标题更新为 DanceTrace
+
+## 关键决策
+
+- 当前分析链路先使用规则模拟结果跑通产品闭环，后续里程碑再接入真实姿态估计
+
+- 当前视频本地管理以浏览器对象 URL 支撑会话内预览，后续需要升级为 IndexedDB Blob 持久化
+
+## 验证结果
+
+- `npm run lint`
+
+- `npm run check`
+
+- `npm run build`
+
+- 浏览器验证：可创建项目并进入项目详情工作台
+
+## 影响文件
+
+- `src/pages/Home.tsx`
+
+- `src/store/useDanceStore.ts`
+
+- `src/data/types.ts`
+
+- `src/features/analysis/scoring.ts`
+
+- `src/components/ScoreRing.tsx`
+
+- `src/components/VideoUploadCard.tsx`
+
+- `src/components/DualPlayer.tsx`
+
+- `vite.config.ts`
+
+- `index.html`
+
+---
+
 # 2026\-06\-12 · v0\.2\.0
 
 ## 已完成
