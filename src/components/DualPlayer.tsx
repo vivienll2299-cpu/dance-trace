@@ -1,22 +1,29 @@
-import { useRef } from 'react'
-import { Link2, Play } from 'lucide-react'
+import { useCallback, useEffect, useRef } from 'react'
+import { Link2, LocateFixed, Play } from 'lucide-react'
 import type { PracticeVideo, VideoAsset } from '@/data/types'
+
+interface JumpRequest {
+  time: number
+  token: number
+}
 
 interface DualPlayerProps {
   master?: VideoAsset
   practice?: PracticeVideo
-  jumpTime?: number
+  jumpRequest?: JumpRequest
+  activeIssueTime?: number
 }
 
-export function DualPlayer({ master, practice, jumpTime = 0 }: DualPlayerProps) {
+export function DualPlayer({ master, practice, jumpRequest, activeIssueTime = 0 }: DualPlayerProps) {
   const masterRef = useRef<HTMLVideoElement>(null)
   const practiceRef = useRef<HTMLVideoElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  const jump = () => {
+  const jump = useCallback((time = activeIssueTime) => {
     const offset = practice?.offsetTime ?? 0
-    if (masterRef.current) masterRef.current.currentTime = jumpTime
-    if (practiceRef.current) practiceRef.current.currentTime = Math.max(0, jumpTime + offset)
-  }
+    if (masterRef.current) masterRef.current.currentTime = time
+    if (practiceRef.current) practiceRef.current.currentTime = Math.max(0, time + offset)
+  }, [activeIssueTime, practice?.offsetTime])
 
   const playBoth = () => {
     jump()
@@ -24,12 +31,24 @@ export function DualPlayer({ master, practice, jumpTime = 0 }: DualPlayerProps) 
     void practiceRef.current?.play()
   }
 
+  useEffect(() => {
+    if (!jumpRequest) return
+    jump(jumpRequest.time)
+    containerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [jump, jumpRequest])
+
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-zinc-950/70 p-4">
+    <div ref={containerRef} className="rounded-[2rem] border border-white/10 bg-zinc-950/70 p-4">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-2 text-sm font-medium text-cyan-100">
-          <Link2 size={16} />
-          双播放器同步回看
+        <div>
+          <div className="flex items-center gap-2 text-sm font-medium text-cyan-100">
+            <Link2 size={16} />
+            双播放器同步回看
+          </div>
+          <div className="mt-2 flex items-center gap-2 text-xs text-zinc-500">
+            <LocateFixed size={13} />
+            当前定位：Master {activeIssueTime.toFixed(1)}s / Practice {Math.max(0, activeIssueTime + (practice?.offsetTime ?? 0)).toFixed(1)}s
+          </div>
         </div>
         <button onClick={playBoth} className="inline-flex items-center gap-2 rounded-full bg-cyan-300 px-4 py-2 text-sm font-bold text-zinc-950">
           <Play size={15} />

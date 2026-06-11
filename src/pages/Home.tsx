@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { Activity, BarChart3, Clock3, Film, Plus, ShieldAlert, Sparkles, Trash2 } from 'lucide-react'
+import { Activity, BarChart3, Clock3, Film, LocateFixed, Plus, ShieldAlert, Sparkles, Target, Trash2 } from 'lucide-react'
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { DualPlayer } from '@/components/DualPlayer'
 import { ScoreRing } from '@/components/ScoreRing'
@@ -13,6 +13,7 @@ export default function Home() {
   const [selectedPracticeId, setSelectedPracticeId] = useState<string>()
   const [offset, setOffset] = useState('0')
   const [selectedIssueTime, setSelectedIssueTime] = useState(0)
+  const [jumpRequest, setJumpRequest] = useState<{ time: number; token: number }>()
 
   const {
     projects,
@@ -61,7 +62,14 @@ export default function Home() {
   const handleAnalyze = (practice?: PracticeVideo) => {
     if (!practice) return
     const result = analyzePractice(practice.id)
-    if (result?.issueMarkers[0]) setSelectedIssueTime(result.issueMarkers[0].time)
+    if (result?.issueMarkers[0]) {
+      locateIssue(result.issueMarkers[0].time)
+    }
+  }
+
+  const locateIssue = (time: number) => {
+    setSelectedIssueTime(time)
+    setJumpRequest({ time, token: Date.now() })
   }
 
   return (
@@ -154,7 +162,12 @@ export default function Home() {
 
               <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
                 <div className="space-y-6">
-                  <DualPlayer master={master} practice={selectedPractice} jumpTime={selectedIssueTime} />
+                  <DualPlayer
+                    master={master}
+                    practice={selectedPractice}
+                    activeIssueTime={selectedIssueTime}
+                    jumpRequest={jumpRequest}
+                  />
                   <PracticeList
                     practices={projectPractices}
                     selectedPracticeId={selectedPractice?.id}
@@ -171,7 +184,7 @@ export default function Home() {
                     onSave={() => selectedPractice && calibratePractice(selectedPractice.id, Number(offset || 0))}
                     onAnalyze={() => handleAnalyze(selectedPractice)}
                   />
-                  <ResultPanel analysis={latestAnalysis} onJump={setSelectedIssueTime} />
+                  <ResultPanel analysis={latestAnalysis} activeIssueTime={selectedIssueTime} onLocate={locateIssue} />
                 </div>
               </div>
             </div>
@@ -261,7 +274,15 @@ function CalibrationPanel({ offset, disabled, onOffsetChange, onSave, onAnalyze 
   )
 }
 
-function ResultPanel({ analysis, onJump }: { analysis?: AnalysisResult; onJump: (time: number) => void }) {
+function ResultPanel({
+  analysis,
+  activeIssueTime,
+  onLocate,
+}: {
+  analysis?: AnalysisResult
+  activeIssueTime: number
+  onLocate: (time: number) => void
+}) {
   if (!analysis) {
     return (
       <section className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 text-sm leading-6 text-zinc-500">
@@ -289,13 +310,38 @@ function ResultPanel({ analysis, onJump }: { analysis?: AnalysisResult; onJump: 
         <p className="mt-2 text-sm leading-6 text-orange-100/70">{analysis.confidenceNotes.join(' ')}</p>
       </div>
       <div className="space-y-3">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2 text-sm font-bold text-white">
+            <Target size={16} />
+            明确扣分点
+          </div>
+          <span className="text-xs text-zinc-500">点击卡片直接定位视频</span>
+        </div>
         {analysis.issueMarkers.map((issue) => (
-          <button key={issue.id} onClick={() => onJump(issue.time)} className="w-full rounded-3xl border border-white/10 bg-black/20 p-4 text-left transition hover:border-cyan-300/50">
+          <button
+            key={issue.id}
+            onClick={() => onLocate(issue.time)}
+            className={`w-full rounded-3xl border p-4 text-left transition ${activeIssueTime === issue.time ? 'border-cyan-300/70 bg-cyan-300/10 shadow-lg shadow-cyan-950/30' : 'border-white/10 bg-black/20 hover:border-cyan-300/50'}`}
+          >
             <div className="flex items-center justify-between gap-3">
               <span className="font-semibold text-white">{issue.label}</span>
-              <span className="rounded-full bg-white/10 px-3 py-1 text-xs text-zinc-300">{issue.time}s</span>
+              <span className="rounded-full bg-orange-300/15 px-3 py-1 text-xs font-bold text-orange-100">扣 {issue.deduction} 分</span>
             </div>
-            <p className="mt-2 text-sm leading-6 text-zinc-400">{issue.description}</p>
+            <p className="mt-2 text-sm leading-6 text-zinc-300">{issue.description}</p>
+            <div className="mt-4 grid gap-3 text-xs leading-5 text-zinc-400">
+              <div className="rounded-2xl bg-white/[0.04] p-3">
+                <span className="font-bold text-zinc-200">判断依据：</span>
+                {issue.evidence}
+              </div>
+              <div className="rounded-2xl bg-white/[0.04] p-3">
+                <span className="font-bold text-zinc-200">改进建议：</span>
+                {issue.suggestion}
+              </div>
+            </div>
+            <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-cyan-300/30 px-3 py-1 text-xs font-semibold text-cyan-100">
+              <LocateFixed size={13} />
+              定位到 {issue.time}s
+            </div>
           </button>
         ))}
       </div>

@@ -34,6 +34,9 @@ export interface IssueMarker {
   type: 'rhythm' | 'pose' | 'confidence'
   label: string
   description: string
+  evidence: string
+  suggestion: string
+  deduction: number
   severity: 'low' | 'medium' | 'high'
 }
 

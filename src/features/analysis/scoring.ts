@@ -1,10 +1,34 @@
 import type { AnalysisResult, ConfidenceLevel, IssueMarker, PracticeVideo, VideoAsset } from '@/data/types'
 
 const issueTemplates = [
-  { type: 'rhythm', label: '慢半拍', description: '动作切换比 Master 晚，建议对照节拍重新练习。' },
-  { type: 'pose', label: '手臂幅度不足', description: '上肢展开角度偏小，动作轮廓不够清晰。' },
-  { type: 'pose', label: '重心偏移', description: '下肢支撑和躯干方向与 Master 存在明显偏差。' },
-  { type: 'rhythm', label: '抢拍进入', description: '进入下一个动作过早，容易导致后续连贯性下降。' },
+  {
+    type: 'rhythm',
+    label: '慢半拍',
+    description: '动作切换比 Master 晚，影响节奏连贯性。',
+    evidence: 'Practice 的关键动作进入点晚于 Master，系统判定为节奏滞后。',
+    suggestion: '单独循环这一小节，先跟拍数进入动作，再逐步恢复原速。',
+  },
+  {
+    type: 'pose',
+    label: '手臂幅度不足',
+    description: '上肢展开角度偏小，动作轮廓不够清晰。',
+    evidence: '肩-肘-腕方向与 Master 偏差较大，手臂末端位置偏内收。',
+    suggestion: '回看该秒左右的上半身动作，重点放大手臂延展和定点位置。',
+  },
+  {
+    type: 'pose',
+    label: '重心偏移',
+    description: '下肢支撑和躯干方向与 Master 存在明显偏差。',
+    evidence: '髋部中心与肩线方向变化不同步，重心没有落在目标支撑侧。',
+    suggestion: '降低速度练习脚步切换，确认重心先到位后再做上肢动作。',
+  },
+  {
+    type: 'rhythm',
+    label: '抢拍进入',
+    description: '进入下一个动作过早，容易导致后续连贯性下降。',
+    evidence: 'Practice 的动作峰值早于 Master，对齐后出现提前完成趋势。',
+    suggestion: '听重拍等待半拍后再进入下一动作，避免提前收动作。',
+  },
 ] as const
 
 function clamp(score: number) {
@@ -37,6 +61,9 @@ export function createMockAnalysis(projectId: string, master: VideoAsset, practi
       type: source.type,
       label: source.label,
       description: source.description,
+      evidence: source.evidence,
+      suggestion: source.suggestion,
+      deduction: index === 0 ? 8 + (seed % 4) : index === 1 ? 5 + (seed % 3) : 3 + (index % 2),
       severity: index === 0 ? 'high' : index === 1 ? 'medium' : 'low',
     }
   })
